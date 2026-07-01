@@ -4,7 +4,7 @@
  */
 import { el, addrEl, formatSol, formatTimestamp, statusBadge, sanitize, fragment } from './ui-helpers.js';
 import { shortenAddress, toHex, getTransactionPda, encodeBase58 } from './squads.js';
-import { getState, setState, getExplorerUrl, EXPLORER_ALLOWLIST } from './state.js';
+import { getState, setState, getExplorerUrl } from './state.js';
 import { decodeInstruction, KNOWN_PROGRAMS } from './decode.js';
 import { isValidBase58 } from './squads.js';
 
@@ -24,46 +24,64 @@ export function showToast(message, type = 'info') {
 // ─── Setup View ───
 
 export function renderSetup(onComplete) {
-  const wrapper = el('div', { className: 'setup-wrapper' });
-  const container = el('div', { className: 'setup' });
-
-  const logoBar = el('div', { className: 'setup-logo' });
   const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  logoBar.appendChild(el('img', { src: isDark ? 'logotype-white.svg' : 'logotype-black.svg', height: '36', alt: 'Squads' }));
-  logoBar.appendChild(el('span', {}, 'Verifier'));
-  container.appendChild(logoBar);
+  const wrapper = el('div', { className: 'setup-wrapper' });
 
+
+  // Main content
+  const main = el('div', { className: 'setup-main' });
+
+  // Left: branding + about
+  const left = el('div', { className: 'setup-left' });
+
+  const brandBlock = el('div', { className: 'setup-brand' });
+  brandBlock.appendChild(el('img', {
+    src: isDark ? 'logotype-white.svg' : 'logotype-black.svg',
+    height: '28',
+    alt: 'Squads',
+  }));
+  brandBlock.appendChild(el('span', { className: 'setup-brand-badge' }, 'Verifier'));
+  left.appendChild(brandBlock);
+
+  left.appendChild(el('p', { className: 'setup-about' },
+    'An independently hosted fork of the Squads multisig verifier, operated by ',
+    el('a', { href: 'https://asymmetric.re', target: '_blank', rel: 'noopener noreferrer' }, 'Asymmetric Research'),
+    ' as part of the ',
+    el('a', { href: 'https://stride.asymmetric.re/', target: '_blank', rel: 'noopener noreferrer' }, 'STRIDE'),
+    ' initiative.',
+  ));
+  left.appendChild(el('p', { className: 'setup-about' },
+    'Independent hosting reduces single-point supply chain risk for multisig operators. The RPC endpoint and block explorer are pinned at the instance level — eliminating user-configurable inputs reduces the attack surface and ensures a consistent, trustworthy experience for every user of this instance.',
+  ));
+
+  const metaGrid = el('div', { className: 'setup-meta' });
+  const metaItems = [
+    ['Pinned RPC', 'Triton One', 'https://triton.one'],
+    ['Pinned Explorer', 'Solscan', 'https://solscan.io'],
+    ['Upstream', 'Solana-Multisig-Tools/multisig-verifier', 'https://github.com/Solana-Multisig-Tools/multisig-verifier'],
+    ['This fork', 'asymmetric-research/multisig-verifier', 'https://github.com/asymmetric-research/multisig-verifier'],
+  ];
+  for (const [label, text, href] of metaItems) {
+    metaGrid.appendChild(el('span', { className: 'setup-meta-label' }, label));
+    metaGrid.appendChild(el('a', { href, target: '_blank', rel: 'noopener noreferrer', className: 'setup-meta-value' }, text));
+  }
+  left.appendChild(metaGrid);
+
+  main.appendChild(left);
+
+  // Right: form
+  const right = el('div', { className: 'setup-right' });
   const card = el('div', { className: 'setup-card' });
 
   card.appendChild(el('h2', {}, 'Connect to your multisig'));
   card.appendChild(el('p', {}, 'Enter your multisig address to get started.'));
 
-  const form = el('div');
-
   const addressField = el('div', { className: 'field' });
   addressField.appendChild(el('label', {}, 'Multisig Address'));
   const addressInput = el('input', { type: 'text', placeholder: 'Enter base58 address...' });
   addressField.appendChild(addressInput);
-  form.appendChild(addressField);
-
-  const rpcField = el('div', { className: 'field' });
-  rpcField.appendChild(el('label', {}, 'RPC URL'));
-  const rpcInput = el('input', { type: 'text', placeholder: 'https://your-rpc-provider.com' });
-  rpcField.appendChild(rpcInput);
-  rpcField.appendChild(el('p', { className: 'hint' }, 'Use a private RPC (Helius, Triton, QuickNode) for reliable access.'));
-  form.appendChild(rpcField);
-
-  const explorerField = el('div', { className: 'field' });
-  explorerField.appendChild(el('label', {}, 'Explorer'));
-  const explorerSelect = el('select');
-  for (const url of EXPLORER_ALLOWLIST) {
-    explorerSelect.appendChild(el('option', { value: url }, url));
-  }
-  explorerField.appendChild(explorerSelect);
-  form.appendChild(explorerField);
 
   const errorMsg = el('p', { className: 'error-inline' });
-  form.appendChild(errorMsg);
 
   const submitBtn = el('button', {
     className: 'btn btn-primary mt-md',
@@ -74,32 +92,18 @@ export function renderSetup(onComplete) {
         errorMsg.className = 'error-inline visible';
         return;
       }
-      const rpc = rpcInput.value.trim();
-      if (!rpc) {
-        errorMsg.textContent = 'RPC URL is required';
-        errorMsg.className = 'error-inline visible';
-        return;
-      }
-      try {
-        const parsed = new URL(rpc);
-        if (parsed.protocol !== 'https:') {
-          errorMsg.textContent = 'RPC URL must use HTTPS';
-          errorMsg.className = 'error-inline visible';
-          return;
-        }
-      } catch {
-        errorMsg.textContent = 'Invalid RPC URL';
-        errorMsg.className = 'error-inline visible';
-        return;
-      }
-      onComplete(addr, rpc, explorerSelect.value);
+      onComplete(addr);
     },
   }, 'Continue');
-  form.appendChild(submitBtn);
 
-  card.appendChild(form);
-  container.appendChild(card);
-  wrapper.appendChild(container);
+  card.appendChild(addressField);
+  card.appendChild(errorMsg);
+  card.appendChild(submitBtn);
+  right.appendChild(card);
+  main.appendChild(right);
+
+  wrapper.appendChild(main);
+
   return wrapper;
 }
 
@@ -111,40 +115,13 @@ function renderSettingsModal(state) {
 
   modal.appendChild(el('h3', {}, 'Settings'));
 
-  const rpcField = el('div', { className: 'field' });
-  rpcField.appendChild(el('label', {}, 'RPC URL'));
-  const rpcInput = el('input', { type: 'text', value: state.rpcUrl });
-  rpcField.appendChild(rpcInput);
-  modal.appendChild(rpcField);
-
-  const explorerField = el('div', { className: 'field' });
-  explorerField.appendChild(el('label', {}, 'Explorer'));
-  const explorerSelect = el('select');
-  for (const url of EXPLORER_ALLOWLIST) {
-    const opt = el('option', { value: url }, url);
-    if (url === state.explorerUrl) opt.selected = true;
-    explorerSelect.appendChild(opt);
-  }
-  explorerField.appendChild(explorerSelect);
-  modal.appendChild(explorerField);
-
   const actions = el('div', { className: 'flex gap-sm mt-md' });
   actions.appendChild(el('button', {
     className: 'btn btn-primary',
     onclick: () => {
-      const rpc = rpcInput.value.trim();
-      if (rpc) {
-        setState({
-          rpcUrl: rpc,
-          explorerUrl: explorerSelect.value,
-          showSettings: false,
-          multisig: null,
-          proposals: [],
-        });
-        location.reload();
-      }
+      setState({ showSettings: false });
     },
-  }, 'Save & Reload'));
+  }, 'Close'));
   actions.appendChild(el('button', {
     className: 'btn',
     onclick: () => setState({ showSettings: false }),
@@ -540,6 +517,11 @@ export function renderLayout({ state, walletManager, proposalActions, onConnect,
     }, 'Connect'));
   }
 
+  headerRight.appendChild(el('button', {
+    className: 'btn btn-ghost btn-sm',
+    onclick: () => setState({ multisigAddress: '', multisig: null, proposals: [] }),
+    title: 'Switch multisig',
+  }, '\u2190 Change'));
   headerRight.appendChild(el('button', { className: 'btn btn-ghost btn-sm', onclick: onSettings }, '\u2699'));
   header.appendChild(headerRight);
   container.appendChild(header);

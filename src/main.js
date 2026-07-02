@@ -55,7 +55,7 @@ document.addEventListener('visibilitychange', () => {
 
 // Cross-tab localStorage detection
 window.addEventListener('storage', (e) => {
-  if (['rpcUrl', 'multisigAddress', 'explorerUrl'].includes(e.key)) {
+  if (['multisigAddress'].includes(e.key)) {
     showToast('Settings changed in another tab. Reloading...', 'info');
     setTimeout(() => location.reload(), 1500);
   }
@@ -91,8 +91,8 @@ function render() {
   }));
 }
 
-async function onSetupComplete(address, rpcUrl, explorerUrl) {
-  // First, resolve what kind of account this is
+async function onSetupComplete(address) {
+  const { rpcUrl } = getState();
   try {
     const resolved = await resolveMultisigAddress(rpcUrl, address);
 
@@ -100,7 +100,7 @@ async function onSetupComplete(address, rpcUrl, explorerUrl) {
       if (resolved.resolvedFrom) {
         showToast('Resolved vault to multisig: ' + resolved.multisigAddress.slice(0, 8) + '...', 'info');
       }
-      setState({ multisigAddress: resolved.multisigAddress, rpcUrl, explorerUrl });
+      setState({ multisigAddress: resolved.multisigAddress });
       await loadMultisig();
       await loadProposals();
     } else {

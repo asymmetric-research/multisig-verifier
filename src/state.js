@@ -2,15 +2,10 @@
  * State management — localStorage hydration + in-memory state + setState()->render()
  */
 
-const EXPLORER_ALLOWLIST = [
-  'https://explorer.solana.com',
-  'https://solscan.io',
-  'https://xray.helius.xyz',
-];
+const EXPLORER_URL = 'https://solscan.io';
 
 const DEFAULTS = {
-  rpcUrl: '',
-  explorerUrl: 'https://solscan.io',
+  rpcUrl: (typeof __RPC_URL__ !== 'undefined' && __RPC_URL__) ? __RPC_URL__ : 'https://api.mainnet-beta.solana.com',
   multisigAddress: '',
 };
 
@@ -40,14 +35,16 @@ function validateExplorerUrl(url) {
 export function init(render) {
   renderFn = render;
 
-  const savedRpc = localStorage.getItem('rpcUrl');
-  const savedExplorer = localStorage.getItem('explorerUrl');
   const savedAddress = localStorage.getItem('multisigAddress');
+
+  // Clear any previously stored user-configurable values
+  localStorage.removeItem('rpcUrl');
+  localStorage.removeItem('explorerUrl');
 
   state = Object.freeze({
     // Persisted config
-    rpcUrl: validateUrl(savedRpc) || DEFAULTS.rpcUrl,
-    explorerUrl: validateExplorerUrl(savedExplorer || DEFAULTS.explorerUrl),
+    rpcUrl: DEFAULTS.rpcUrl,
+    explorerUrl: EXPLORER_URL,
     multisigAddress: savedAddress || '',
 
     // Runtime state (never persisted)
@@ -91,13 +88,6 @@ export function setState(partial) {
       state = Object.freeze({ ...state, rpcUrl: localStorage.getItem('rpcUrl') || DEFAULTS.rpcUrl });
     }
   }
-  if ('explorerUrl' in partial) {
-    const validated = validateExplorerUrl(partial.explorerUrl);
-    localStorage.setItem('explorerUrl', validated);
-    if (validated !== partial.explorerUrl) {
-      state = Object.freeze({ ...state, explorerUrl: validated });
-    }
-  }
   if ('multisigAddress' in partial) {
     localStorage.setItem('multisigAddress', partial.multisigAddress);
   }
@@ -106,20 +96,6 @@ export function setState(partial) {
 }
 
 export function getExplorerUrl(type, value) {
-  const base = state.explorerUrl;
-  if (base.includes('solscan.io')) {
-    if (type === 'tx') return `${base}/tx/${value}`;
-    if (type === 'account') return `${base}/account/${value}`;
-  }
-  if (base.includes('explorer.solana.com')) {
-    if (type === 'tx') return `${base}/tx/${value}`;
-    if (type === 'address') return `${base}/address/${value}`;
-  }
-  if (base.includes('xray.helius.xyz')) {
-    if (type === 'tx') return `${base}/tx/${value}`;
-    if (type === 'account') return `${base}/account/${value}`;
-  }
-  return `${base}/account/${value}`;
+  if (type === 'tx') return `${EXPLORER_URL}/tx/${value}`;
+  return `${EXPLORER_URL}/account/${value}`;
 }
-
-export { EXPLORER_ALLOWLIST };

@@ -469,7 +469,7 @@ function renderProposalDetail(state, proposalActions, handlers) {
 
 // ─── Main Layout ───
 
-export function renderLayout({ state, walletManager, proposalActions, onConnect, onDisconnect, onSettings, onRefresh, onLoadMore, onExpandProposal, onApprove, onReject }) {
+export function renderLayout({ state, walletManager, proposalActions, onConnect, onDisconnect, onRefresh, onLoadMore, onExpandProposal, onApprove, onReject }) {
   const container = document.createDocumentFragment();
 
   // Header (sticky)
@@ -522,7 +522,6 @@ export function renderLayout({ state, walletManager, proposalActions, onConnect,
     onclick: () => setState({ multisigAddress: '', multisig: null, proposals: [] }),
     title: 'Switch multisig',
   }, '\u2190 Change'));
-  headerRight.appendChild(el('button', { className: 'btn btn-ghost btn-sm', onclick: onSettings }, '\u2699'));
   header.appendChild(headerRight);
   container.appendChild(header);
 
@@ -668,10 +667,6 @@ export function renderLayout({ state, walletManager, proposalActions, onConnect,
   }
 
   // Modals
-  if (state.showSettings) {
-    container.appendChild(renderSettingsModal(state));
-  }
-
   if (state.showWalletPicker) {
     container.appendChild(renderWalletPicker(walletManager));
   }

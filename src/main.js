@@ -82,7 +82,6 @@ function render() {
     proposalActions,
     onConnect,
     onDisconnect,
-    onSettings,
     onRefresh,
     onLoadMore,
     onExpandProposal,
@@ -125,11 +124,6 @@ async function onConnect(wallet) {
 async function onDisconnect() {
   await walletManager.disconnect();
   setState({ walletAccount: null, connectedWallet: null });
-}
-
-function onSettings() {
-  // Settings modal is handled by ui-layout
-  setState({ showSettings: true });
 }
 
 async function onRefresh() {

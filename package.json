@@ -1,5 +1,5 @@
 {
-  "name": "multisig-verifier",
+  "name": "squads.asymmetric.re",
   "version": "1.0.0",
   "description": "Minimal multisig transaction verifier for Squads Protocol v4",
   "private": true,

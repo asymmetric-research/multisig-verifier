@@ -59,7 +59,7 @@ export function renderSetup(onComplete) {
     ['Pinned RPC', 'Triton One', 'https://triton.one'],
     ['Pinned Explorer', 'Solscan', 'https://solscan.io'],
     ['Upstream', 'Solana-Multisig-Tools/multisig-verifier', 'https://github.com/Solana-Multisig-Tools/multisig-verifier'],
-    ['This fork', 'asymmetric-research/multisig-verifier', 'https://github.com/asymmetric-research/multisig-verifier'],
+    ['This fork', 'asymmetric-research/squads.asymmetric.re', 'https://github.com/asymmetric-research/squads.asymmetric.re'],
   ];
   for (const [label, text, href] of metaItems) {
     metaGrid.appendChild(el('span', { className: 'setup-meta-label' }, label));

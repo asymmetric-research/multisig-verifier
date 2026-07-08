@@ -346,6 +346,24 @@ console.log('\n=== hostile RPC shapes do not crash resolution ===');
   globalThis.fetch = realFetch;
 }
 
+console.log('\n=== non-system-owned account skips the vault history scan ===');
+{
+  // An account owned by an unrelated program cannot be a vault, so its
+  // transaction history must NOT be scanned. Use vault PDA index 9 but give
+  // it a non-system owner: without the gate this WOULD resolve via history,
+  // so 'unknown' here proves the scan was skipped.
+  const [vault9Bytes] = await getMultisigVaultPda(MULTISIG, 9);
+  const VAULT_9_FOREIGN = encodeBase58(vault9Bytes);
+  accounts.set(VAULT_9_FOREIGN, {
+    owner: 'BPFLoaderUpgradeab1e11111111111111111111111',
+    data: new Uint8Array([1, 2, 3]),
+  });
+  signatures.set(VAULT_9_FOREIGN, [{ signature: 'foreign-vault-sig' }]);
+  transactions.set('foreign-vault-sig', [VAULT_9_FOREIGN, MULTISIG]);
+  const r = await resolveMultisigAddress(RPC, VAULT_9_FOREIGN);
+  assertEq(r.type, 'unknown', 'program-owned vault PDA: history scan skipped, type is unknown');
+}
+
 console.log('\n=== large multisig (>256 members) still decodes ===');
 {
   const BIG_MS = '4vK6sVXQNkiEY1wyqx9Q44JxMGRHS9XJ6NoavaZwzGLE';

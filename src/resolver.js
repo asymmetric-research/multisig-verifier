@@ -107,10 +107,16 @@ export async function resolveMultisigAddress(rpcUrl, inputAddress) {
   if (viaCreateKey) return viaCreateKey;
 
   // Case 4: input is a vault — find the multisig in recent transaction
-  // history and confirm by re-deriving the vault PDA.
+  // history and confirm by re-deriving the vault PDA. Only worth attempting
+  // when the input could actually be a vault: vaults hold nothing but
+  // lamports, so they are either system-owned or don't exist on-chain yet.
+  // (This also avoids a very expensive history scan when the input is a
+  // busy program/mint/token account.)
   const diag = {};
-  const viaRecentTx = await resolveVaultViaRecentTransactions(rpcUrl, inputAddress, diag);
-  if (viaRecentTx) return viaRecentTx;
+  if (!account || account.owner === SYSTEM_PROGRAM_ID) {
+    const viaRecentTx = await resolveVaultViaRecentTransactions(rpcUrl, inputAddress, diag);
+    if (viaRecentTx) return viaRecentTx;
+  }
 
   if (!account) {
     throw new Error(

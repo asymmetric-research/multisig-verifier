@@ -37,7 +37,7 @@ All account parsing uses a hand-written Borsh reader with no external dependenci
 ## Project Structure
 
 ```
-multisig-verifier/
+squads.asymmetric.re/
 ├── index.html                  # Shell — CSP headers, no inline scripts
 ├── style.css                   # Full design system (dark/light, tokens, components)
 ├── webpack.config.js           # Production build config (content hashing, minification)
